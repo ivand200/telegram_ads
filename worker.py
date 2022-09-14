@@ -8,7 +8,7 @@ from sqlalchemy import select, text
 from database.connection import engine_url as engine
 from settings import Settings
 from sqlmodel import Field, Session, select
-from models.channels import Channel
+from models.channels import Channels
 
 settings = Settings()
 
@@ -19,13 +19,22 @@ logger = app.log.get_default_logger()
 SITE = "https://telemetr.me/channels/"  # /?page=2
 
 
+NO_DESCRIPTION = [
+    "Telegram-zh_CN 简体中文语言包",
+    "ЛИТВИН",
+    "Btok 1024.ETH Official Channel",
+    "Дудь",
+    "TAMILROCKERS"
+]
+
+
 @app.task
-def update_channels(session = Session(engine)):
+def update_channels(session=Session(engine)):
     """
     TODO: ...
     """
     logger.info("Start updating channels")
-    query = select(Channel)
+    query = select(Channels)
     channels = session.exec(query).all()
     logger.info("Done, updating channels")
     return channels
@@ -34,107 +43,61 @@ def update_channels(session = Session(engine)):
 @app.task
 def populate_channel_table():
     """
-    TODO: ...
+    Populate channels table
     """
     r = requests.get(SITE)
     soup = BeautifulSoup(r.text, "html.parser")
     titles = [item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")]
-    raw_subs = [int(sub.get_text(strip=True).replace("'", "")) for sub in soup.find_all(class_="kt-number kt-font-brand text-cursor")]
+    raw_subs = [
+        int(sub.get_text(strip=True).replace("'", "")) 
+        for sub in soup.find_all(class_="kt-number kt-font-brand text-cursor")
+    ]
     subs = raw_subs[0::2]
-    des = [des["data-cont"] for des in soup.find_all(class_="btn btn-outline-warning btn-sm btn-xs kt-font-dark")]
+    week_views = raw_subs[1::2]
+    raw_er = [
+        i.get_text(strip=True) for i in soup.find_all(class_="kt-number kt-font-brand")
+    ]
+    er = [i for i in raw_er if "%" in i]
+    month_change_raw = [
+    i.get_text(strip=True) for i in soup.find_all(class_=["kt-number kt-number-small kt-font-success", "kt-number kt-number-small kt-font-danger"])
+    ]
+    month_change = month_change_raw[2::3]
     count = 1
     while count <= 5:
         for item in range(29):
-            # if isinstance(titles[item], str):
-            try:
-                new_title = str(titles[item])
-            except:
-                new_title = ""
-
-            # if titles[item] == "Telegram-zh_CN 简体中文语言包":
-            #     new_des = ""
-            # else:
-            #     new_des = des[item]
-            # channel = Channel(title=new_title, description=new_des)
-            channel = Channel(title=new_title, subscribers=subs[item])  # description=des[item],
+            new_title = str(titles[item])
+            channel = Channels(
+                title=new_title,
+                subscribers=subs[item],
+                week_views=week_views[item],
+                er=er[item],
+                month_change=month_change[item]
+            )
             with Session(engine) as session:
                 session.add(channel)
                 session.commit()
         count += 1
         r = requests.get(f"{SITE}/?page={count}")
         soup = BeautifulSoup(r.text, "html.parser")
-        titles = [item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")]
-        raw_subs = [int(sub.get_text(strip=True).replace("'", "")) for sub in soup.find_all(class_="kt-number kt-font-brand text-cursor")]
+        titles = [
+            item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")
+        ]
+        raw_subs = [
+            int(sub.get_text(strip=True).replace("'", "")) 
+            for sub in soup.find_all(class_="kt-number kt-font-brand text-cursor")
+        ]
         subs = raw_subs[0::2]
-        des = [des["data-cont"] for des in soup.find_all(class_="btn btn-outline-warning btn-sm btn-xs kt-font-dark")]
+        week_views = raw_subs[1::2]
+        raw_er = [
+            i.get_text(strip=True) 
+            for i in soup.find_all(class_="kt-number kt-font-brand")
+        ]
+        er = [i for i in raw_er if "%" in i]
+        month_change_raw = [
+        i.get_text(strip=True) for i in soup.find_all(class_=["kt-number kt-number-small kt-font-success", "kt-number kt-number-small kt-font-danger"])
+        ]
+        month_change = month_change_raw[2::3]
     return True
-
-    # count = 1
-    # while count <= 20:
-    #     for title in titles:
-    #         if isinstance(title, str):
-    #             channel = Channel(title=title, description=des)
-    #             with Session(engine) as session:
-    #                 session.add(channel)
-    #                 session.commit()
-    #     count += 1
-    #     r = requests.get(f"{SITE}/?page={count}")
-    #     soup = BeautifulSoup(r.text, "html.parser")
-    #     titles = [item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")]
-    # return True
-
-
-
-
-
-    # logger.info("Start populate Channels table")
-    # with engine.connect().execution_options(autocommit=True) as conn:
-    #     r = requests.get(SITE)
-    #     soup = BeautifulSoup(r.text, "html.parser")
-    #     titles = [item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")]
-    #     for item in titles:
-    #         if isinstance(item, str):
-    #             query = conn.execute("INSERT INTO channel (title, description, subscribers) VALUES (:title)", title=item)
-        # r = requests.get(f"{SITE}/?page={count}")
-        # soup = BeautifulSoup(r.text, "html.parser")
-        # titles = [item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")]
-
-
-# channels = conn.execute(text("SELECT title FROM channel"))
-# all = channels.fetchall()
-
-
-
-    # logger.info("Start populate Channels table")
-    # r = requests.get(SITE)
-    # soup = BeautifulSoup(r.text, "html.parser")
-
-    # titles = [item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")]
-    # count = 1
-    # while count <= 50:
-    #     with Session(engine) as session:
-    #         for title in titles:
-    #             if isinstance(title, str):
-    #                 channel = Channel(title=title)
-    #                 session.add(channel)
-    #                 count += 1
-    #                 session.commit()
-    #         r = requests.get(f"{SITE}/?page={count}")
-    #         soup = BeautifulSoup(r.text, "html.parser")
-    #         titles = [item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")]
-        
-
-
-    # for title in titles:
-    #     if isinstance(title, str):
-    #         channel = Channel(title=title)
-    #         session.add(channel)
-    #         session.commit()
-    # logger.info("Done populate Chanels table")
-    
-
-    # raw_subscribers = [int(sub.get_text(strip=True).replace("'", "")) for sub in soup.find_all(class_="kt-number kt-font-brand text-cursor")]
-    # subscribers = raw_subscribers[0::2]
 
 
 # app.conf.beat_schedule = {
@@ -143,7 +106,3 @@ def populate_channel_table():
 #         "schedule": crontab(minute=30, hour=22),
 #     }
 # }
-
-# channels = conn.execute(text("SELECT title FROM channel"))
-# all = channels.fetchall()
-# print(all)
