@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Session, create_engine
 
-from models.channels import Channel
+from models.channels import Channels
 from settings import Settings
 
 settings = Settings()
