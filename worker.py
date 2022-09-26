@@ -29,6 +29,13 @@ NO_DESCRIPTION = [
     "Дмитрий Медведев",
 ]
 
+NO_VIEWS = [
+    "PUNTER KI PANCHAYAT",
+]
+
+NO_ER = [
+    "PUNTER KI PANCHAYAT",
+]
 
 @app.task
 def update_channels(session=Session(engine)):
@@ -80,20 +87,32 @@ def populate_channel_table():
 
     count = 1
     while count <= 5:
-        track = 0
+        track_des = 0
+        track_week = 0
+        track_er = 0
         for item in range(30):
             new_title = str(titles[item])
             if titles[item] in NO_DESCRIPTION:
                 new_des = ""
-                track += 1
+                track_des += 1
             else:
-                new_des = des[item - track]
+                new_des = des[item - track_des]
+            if titles[item] in NO_VIEWS:
+                week = 0
+                track_week += 1
+            else:
+                week = week_views[item - track_week]
+            if titles[item] in NO_ER:
+                new_er = ""
+                track_er +=1 
+            else:
+                new_er = er[item-track_er]
             channel = Channels(
                 title=new_title,
                 description=new_des,
                 subscribers=subs[item],
-                week_views=week_views[item],
-                er=er[item],
+                week_views=week,
+                er=new_er,
                 month_change=month_change[item],
             )
             logger.info(f"Populate channel | title: {new_title}")
