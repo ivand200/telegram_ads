@@ -20,7 +20,7 @@ async def retrieve_all_Channels(session=Depends(get_session)):
     return channels
 
 
-@router.get("/title")
+@router.post("/title")
 def get_channel_by_title(search: dict = Body(...), session = Depends(get_session)):
     """
     Get channel by title

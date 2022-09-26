@@ -79,4 +79,17 @@ async def test_get_by_id(test_client: httpx.AsyncClient, initial_channels):
     assert r.json()["title"] == "test_blabla_1"
 
 
+@pytest.mark.asyncio
+async def test_get_by_title(test_client: httpx.AsyncClient, initial_channels):
+    """
+    GIVEN title or regex
+    WHEN GET "/channels/title" requested
+    THEN check status_code
+    """
+    r = await test_client.post("/channels/title", json={"title": initial_channels[0].title})
+    assert r.status_code == 200
+    assert initial_channels[0].title in r.json()[0][0]
+    # print(r.json()[0][0])
+
+
 
