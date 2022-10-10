@@ -4,14 +4,19 @@ from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Column, JSON
 
 
-class Channels(SQLModel, table=True):
+class Channel(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     title: str  # Field(unique=True)
+    avatar: Optional[str] = None
     description: Optional[str] = None
     subscribers: Optional[int] = None
-    week_views: Optional[int] = None
-    month_change: Optional[str] = None
-    er: Optional[str] = None
+    subs_today_rate: Optional[str] = None
+    subs_yearsterday_rate: Optional[str] = None
+    subs_week_rate: Optional[str] = None
+    subs_month_rate: Optional[str] = None
+    week_views: Optional[str] = None
+    tags: Optional[int] = None
+    e_r: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True

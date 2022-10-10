@@ -8,7 +8,7 @@ from sqlmodel import SQLModel, Session, create_engine
 
 from main import app
 from database.connection import get_session, engine_url
-from models.channels import Channels
+from models.channels import Channel
 
 # database_test = "sqlite:///./sql_app.db"
 # test_engine = create_engine(database_test, echo=True)
@@ -37,8 +37,8 @@ async def test_client():
 
 @pytest_asyncio.fixture(autouse=True, scope="module")
 async def initial_channels():
-    channel_1 = Channels(title="test_blabla_1")
-    channel_2 = Channels(title="test_blablar_2")
+    channel_1 = Channel(title="test_blabla_1")
+    channel_2 = Channel(title="test_blablar_2")
 
     with Session(engine_url) as session:
         session.add(channel_1)

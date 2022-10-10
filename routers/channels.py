@@ -4,18 +4,18 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Query, B
 from sqlmodel import select
 
 from database.connection import get_session
-from models.channels import Channels
+from models.channels import Channel
 from database.psycopg import cur
 
 router = APIRouter()
 
 
-@router.get("/list", response_model=List[Channels])
+@router.get("/list", response_model=List[Channel])
 async def retrieve_all_Channels(session=Depends(get_session)):
     """
     Get channels list
     """
-    query = select(Channels)
+    query = select(Channel)
     channels = session.exec(query).all()
     return channels
 
@@ -33,12 +33,12 @@ def get_channel_by_title(search: dict = Body(...), session = Depends(get_session
     return result
 
 
-@router.get("/{id}", response_model=Channels)
+@router.get("/{id}", response_model=Channel)
 async def get_channel(id: str, session=Depends(get_session)):
     """
     Get channel by id
     """
-    channel = session.get(Channels, id)
+    channel = session.get(Channel, id)
     if channel is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -48,7 +48,7 @@ async def get_channel(id: str, session=Depends(get_session)):
 
 
 @router.post("/")
-async def create_channel(channel: Channels, session=Depends(get_session)):
+async def create_channel(channel: Channel, session=Depends(get_session)):
     """
     Create a new channel
     """
@@ -60,11 +60,11 @@ async def create_channel(channel: Channels, session=Depends(get_session)):
 
 
 @router.put("/{id}")
-async def update_channel(id: int, new_data: Channels, session=Depends(get_session)):
+async def update_channel(id: int, new_data: Channel, session=Depends(get_session)):
     """
     Update channel
     """
-    channel = session.get(Channels, id)
+    channel = session.get(Channel, id)
     if channel is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -84,7 +84,7 @@ async def delete_channel(id: int, session=Depends(get_session)):
     """
     Delete channel by id
     """
-    channel = session.get(Channels, id)
+    channel = session.get(Channel, id)
     if channel is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
