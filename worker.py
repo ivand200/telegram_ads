@@ -51,10 +51,69 @@ def update_channels(session=Session(engine)):
     TODO: ...
     """
     logger.info("Start updating channels")
-    query = select(Channel)
-    channels = session.exec(query).all()
+    r = requests.get(SITE)
+    soup = BeautifulSoup(r.text, "html.parser")
+    titles = [
+        item.get_text(strip=True) for item in soup.find_all(class_="kt-ch-title")
+    ]
+    raw_subscribers = [
+        int(sub.get_text(strip=True).replace("'", ""))
+        for sub in soup.find_all(class_="kt-number kt-font-brand text-cursor")
+    ]
+    subscribers = raw_subscribers[0::2]
+    week_views = raw_subscribers[1::2]
+    raw_er = [
+        i.get_text(strip=True) for i in soup.find_all(class_="kt-number kt-font-brand")
+    ]
+    e_r = [i for i in raw_er if "%" in i]
+    subs_rate = [
+        i.get_text(strip=True)
+        for i in soup.find_all(
+            class_=[
+                "kt-number kt-font-success",
+                "kt-number kt-font-danger",
+                "kt-number kt-number-small kt-font-success",
+                "kt-number kt-number-small kt-font-danger",
+            ]
+        )
+    ]
+    subs_today_rate = subs_rate[0::4]
+    subs_yesterday_rate = subs_rate[1::4]
+    subs_week_rate = subs_rate[2::4]
+    subs_month_rate = subs_rate[3::4]
+
+    count = 1
+    while count <= 5:
+        track_week = 0
+        track_er = 0
+        track_subs = 0
+        for item in range(30):
+            new_title = str(titles[item])
+            with Session(engine) as session:
+                query = select(Channel).where(Channel.title == new_title)
+                if query:
+                    result = session.exec(query)
+                    channel = result.one()
+    
+                    channel.subscribers = 
+                    logger.info("Channel: %s", channel)
+        count += 1
+
+        # with Session(engine) as session:
+            # query = select(Channel).where(Channel.title == "title")
+            # result = session.exec(query)
+            # channel = result.one()
+            # logger.info("Channel | name: %s", channel.title)
+    # 
+            # channel.subscribers = 16
+            # session.add(channel)
+            # session.commit()
+            # session.refresh(channel)
+            # logger.info("Updated channel: %", channel.title)
+    # query = select(Channel)
+    # channels = session.exec(query).all()
     logger.info("Done, updating channels")
-    return channels
+    return True
 
 
 @app.task
